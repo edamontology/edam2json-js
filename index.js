@@ -76,7 +76,6 @@ fs.createReadStream("EDAM_1.25.owl")
           });
       }
     }
-    console.log(classes[classes.length - 10].properties);
   });
 
 /*exports.parseOWL = (file) => {
