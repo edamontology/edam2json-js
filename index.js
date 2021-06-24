@@ -28,22 +28,9 @@ function parseOWL(fileExt) {
 }
 
 function constructJSON(parsedRDF) {
-  //populating classes
+  //populating the classes array
   for (let i = 0; i < parserObjs.length; i++) {
-    if (parserObjs[i].object.value == classVal) {
-      classCount++;
-      classes.push({
-        value: parserObjs[i].subject.value,
-        subclasses: [],
-        superclasses: [],
-        properties: {},
-      });
-    }
-  }
-
-  //populating the subclasses and properties
-  for (let i = 0; i < parserObjs.length; i++) {
-    const subclasss =
+    const subclass =
       parserObjs[i].predicate.value == subClassVal &&
       edamRe.test(parserObjs[i].object.value);
 
@@ -53,45 +40,45 @@ function constructJSON(parsedRDF) {
 
     const property =
       parserObjs[i].predicate.value != subClassVal &&
-      parserObjs[i].object.value != classVal;
+      parserObjs[i].object.value != classVal &&
+      edamRe.test(parserObjs[i].subject.value);
 
-    //parsing subclasses+blank nodes
-    if (subclassRelation) {
-      const classValue = classes.find(
-        (x) => x.value === parserObjs[i].subject.value
-      );
-      const relationName = parserObjs[i + 1].object.value.split("/").pop();
-
-      if (relationName in classValue)
-        classValue[relationName].push(parserObjs[i + 2].object.value);
-      else classValue[relationName] = [parserObjs[i + 2].object.value];
-
-      //parsing normal subclasses
-    } else if (subclasss) {
-      //updating the subclass
-      classes
-        .find((x) => x.value === parserObjs[i].subject.value)
-        ?.superclasses.push({ value: parserObjs[i].object.value });
-
-      //updating the superclass
-      classes
-        .find((x) => x.value === parserObjs[i].object.value)
-        ?.subclasses.push({ value: parserObjs[i].subject.value });
+    //parsing the nodes
+    if (parserObjs[i].object.value == classVal) {
+      //if the node doesn't exist, create it
+      findNode(parserObjs[i].subject.value);
     }
 
+    //parsing subclasses+blank nodes
+    else if (subclassRelation) {
+      let nodeValue = findNode(parserObjs[i].subject.value);
+      const relationName = parserObjs[i + 1].object.value.split("/").pop();
+
+      if (relationName in nodeValue)
+        nodeValue[relationName].push(parserObjs[i + 2].object.value);
+      else nodeValue[relationName] = [parserObjs[i + 2].object.value];
+    }
+    //parsing subclasses
+    else if (subclass) {
+      //updating the subclass
+      let nodeValue = findNode(parserObjs[i].subject.value);
+      nodeValue.superclasses.push({ value: parserObjs[i].object.value });
+
+      //updating the superclass
+      nodeValue = findNode(parserObjs[i].object.value);
+      nodeValue.subclasses.push({ value: parserObjs[i].subject.value });
+    }
     //parsing properties
     else if (property) {
       const propName = parserObjs[i].predicate.value.split("#")[1];
       const propValue = parserObjs[i].object.value;
-      const classValue = classes.find(
-        (x) => x.value === parserObjs[i].subject.value
-      );
+      const nodeValue = findNode(parserObjs[i].subject.value);
 
-      if (!classValue | !propName) continue;
+      if (!propName) continue;
 
-      if (propName in classValue.properties)
-        classValue.properties[propName].push(propValue);
-      else classValue.properties[propName] = [propValue];
+      if (propName in nodeValue.properties)
+        nodeValue.properties[propName].push(propValue);
+      else nodeValue.properties[propName] = [propValue];
     }
   }
 
@@ -113,10 +100,31 @@ function constructJSON(parsedRDF) {
   });
   file.end();
 }
-/*exports.parseOWL = (file) => {
-  fs.createReadStream(file)
-    .pipe(myParser)
-    .on("data", console.log)
-    .on("error", console.error)
-    .on("end", () => console.log("All triples were parsed!"));
-};*/
+
+/**
+ *
+ * @param {string} uri the uri of the node to be created
+ */
+function createNode(uri) {
+  classes.push({
+    value: uri,
+    subclasses: [],
+    superclasses: [],
+    properties: {},
+  });
+}
+
+/**
+ *
+ * @param {string} uri the uri of the node to be created
+ * @returns the node value in the array
+ * finds a node in the classes array. And if it doesn't exit, creates one
+ */
+function findNode(uri) {
+  let nodeValue = classes.find((x) => x.value === uri);
+  if (!nodeValue) {
+    createNode(uri);
+    return classes.find((x) => x.value === uri);
+  }
+  return nodeValue;
+}
