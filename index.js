@@ -8,7 +8,7 @@ var edamRe = new RegExp("^(http|https)://edamontology.org/", "i");
 
 let parserObjs = [];
 let classes = [];
-
+let tree = [];
 let classCount = 0;
 const myParser = new RdfXmlParser();
 
@@ -24,6 +24,7 @@ function parseOWL(fileExt) {
     .on("end", () => {
       console.log("All triples were parsed!");
       constructJSON(parserObjs);
+      tree = makeTree(classes);
     });
 }
 
@@ -99,6 +100,38 @@ function constructJSON(parsedRDF) {
     file.write(JSON.stringify(v) + "\n");
   });
   file.end();
+}
+
+/**
+ *
+ * @param {object[]} nodes array of all nodes (flattened)
+ */
+function makeTree(nodes) {
+  let hashTable = Object.create(null);
+  nodes.forEach(
+    (aData) => (hashTable[aData.value] = { ...aData, children: [] })
+  );
+  let dataTree = [];
+
+  nodes.forEach((aData) => {
+    if (aData.superclasses.length > 0) {
+      aData.superclasses.forEach((parent) => {
+        console.log(parent.value);
+
+        hashTable[parent.value].children.push(hashTable[aData.value]);
+      });
+    } else dataTree.push(hashTable[aData.value]);
+  });
+  let treeRoot = { children: dataTree };
+  var file = fs.createWriteStream("tree.json");
+  file.on("error", function (err) {
+    /* error handling */
+  });
+  file.write(JSON.stringify(treeRoot));
+
+  file.end();
+
+  return dataTree;
 }
 
 /**
