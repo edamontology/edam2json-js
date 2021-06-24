@@ -12,13 +12,16 @@ var edamRe = new RegExp(
 
 let parserObjs = [];
 let classes = [];
-let tree = [];
-let classCount = 0;
 const myParser = new RdfXmlParser();
 
-parseOWL("EDAM_1.25.owl");
+parseToJSON("EDAM_1.25.owl");
 
-function parseOWL(fileExt) {
+/**
+ *
+ * @param {string} fileExt relative path of the file to parse
+ * parses an OWL EDAM file to a json format
+ */
+function parseToJSON(fileExt) {
   fs.createReadStream(fileExt)
     .pipe(myParser)
     .on("data", (data) => {
@@ -28,10 +31,15 @@ function parseOWL(fileExt) {
     .on("end", () => {
       console.log("All triples were parsed!");
       constructJSON(parserObjs);
-      tree = makeTree(classes);
+      let tree = makeTree(classes);
     });
 }
 
+/**
+ *
+ * @param {object[]} parsedRDF array of parsed RDF objects
+ * construct a json tree compliant with EDAM schema
+ */
 function constructJSON(parsedRDF) {
   //populating the classes array
   for (let i = 0; i < parserObjs.length; i++) {
@@ -85,9 +93,11 @@ function constructJSON(parsedRDF) {
 
       if (!propName) continue;
 
-      if (propName in nodeValue.properties)
-        nodeValue.properties[propName].push(propValue);
-      else nodeValue.properties[propName] = [propValue];
+      //create an array if property has more than one value
+      if (propName in nodeValue) {
+        nodeValue[propName] = [nodeValue[propName]];
+        nodeValue[propName].push(propValue);
+      } else nodeValue[propName] = propValue;
     }
   }
 }
@@ -99,7 +109,7 @@ function constructJSON(parsedRDF) {
 function makeTree(nodes) {
   let hashTable = Object.create(null);
   nodes.forEach(
-    (nodesCpy) => (hashTable[nodesCpy.value] = { ...nodesCpy, children: [] })
+    (nodesCpy) => (hashTable[nodesCpy.value] = { children: [], ...nodesCpy })
   );
   let dataTree = [];
 
@@ -110,7 +120,11 @@ function makeTree(nodes) {
       });
     } else dataTree.push(hashTable[nodesCpy.value]);
   });
-  let treeRoot = { children: dataTree };
+  let treeRoot = {
+    children: dataTree,
+    data: { uri: "owl:Thing" },
+    meta: { date: "18.06.2020 09:15 UTC", version: "1.25" },
+  };
 
   var file = fs.createWriteStream("tree.json");
   file.on("error", function (err) {
@@ -131,7 +145,6 @@ function createNode(uri) {
     value: uri,
     subclasses: [],
     superclasses: [],
-    properties: {},
   });
 }
 
