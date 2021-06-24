@@ -23,7 +23,6 @@ function parseOWL(fileExt) {
     .on("error", console.error)
     .on("end", () => {
       console.log("All triples were parsed!");
-      console.log(parserObjs.length);
       constructJSON(parserObjs);
     });
 }
@@ -37,7 +36,7 @@ function constructJSON(parsedRDF) {
         value: parserObjs[i].subject.value,
         subclasses: [],
         superclasses: [],
-        properties: [{ name: "", value: [] }],
+        properties: {},
       });
     }
   }
@@ -52,7 +51,11 @@ function constructJSON(parsedRDF) {
       parserObjs[i].predicate.value == subClassVal &&
       parserObjs[i].object.termType == "BlankNode";
 
-    //handling subclasses+blank nodes
+    const property =
+      parserObjs[i].predicate.value != subClassVal &&
+      parserObjs[i].object.value != classVal;
+
+    //parsing subclasses+blank nodes
     if (subclassRelation) {
       const classValue = classes.find(
         (x) => x.value === parserObjs[i].subject.value
@@ -62,6 +65,8 @@ function constructJSON(parsedRDF) {
       if (relationName in classValue)
         classValue[relationName].push(parserObjs[i + 2].object.value);
       else classValue[relationName] = [parserObjs[i + 2].object.value];
+
+      //parsing normal subclasses
     } else if (subclasss) {
       //updating the subclass
       /*classes
@@ -75,30 +80,21 @@ function constructJSON(parsedRDF) {
     }
 
     //parsing properties
-    else if (
-      (parserObjs[i].predicate.value != subClassVal) |
-      (parserObjs[i].predicate.value != classVal)
-    ) {
+    else if (property) {
       const propName = parserObjs[i].predicate.value.split("#")[1];
       const classValue = classes.find(
         (x) => x.value === parserObjs[i].subject.value
       );
 
-      if (!classValue) continue;
+      if (!classValue | !propName) continue;
 
-      const propValue = classValue.properties.find((x) => x.name === propName);
-
-      if (propValue) {
-        propValue.value.push(parserObjs[i].object.value);
-      } else
-        classValue.properties.push({
-          name: propName,
-          value: [parserObjs[i].object.value],
-        });
+      if (propName in classValue.properties)
+        classValue.properties[propName].push(parserObjs[i].object.value);
+      else classValue.properties[propName] = [parserObjs[i].object.value];
     }
   }
 
-  var file = fs.createWriteStream("before.json");
+  var file = fs.createWriteStream("parsedRDF.json");
   file.on("error", function (err) {
     /* error handling */
   });
@@ -107,7 +103,7 @@ function constructJSON(parsedRDF) {
   });
   file.end();
 
-  var file = fs.createWriteStream("after.json");
+  var file = fs.createWriteStream("parsedJSON.json");
   file.on("error", function (err) {
     /* error handling */
   });
