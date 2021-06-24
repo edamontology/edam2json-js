@@ -11,73 +11,111 @@ let classes = [];
 
 let classCount = 0;
 const myParser = new RdfXmlParser();
-fs.createReadStream("EDAM_1.25.owl")
-  .pipe(myParser)
-  .on("data", (data) => {
-    parserObjs.push(data);
-  })
-  .on("error", console.error)
-  .on("end", () => {
-    console.log("All triples were parsed!");
-    console.log(parserObjs.length);
 
-    //populating classes
-    for (let i = 0; i < parserObjs.length; i++) {
-      if (parserObjs[i].object.value == classVal) {
-        classCount++;
-        classes.push({
-          value: parserObjs[i].subject.value,
-          subclasses: [],
-          superclasses: [],
-          properties: [{ name: "", value: [] }],
+parseOWL("EDAM_1.25.owl");
+
+function parseOWL(fileExt) {
+  fs.createReadStream(fileExt)
+    .pipe(myParser)
+    .on("data", (data) => {
+      parserObjs.push(data);
+    })
+    .on("error", console.error)
+    .on("end", () => {
+      console.log("All triples were parsed!");
+      console.log(parserObjs.length);
+      constructJSON(parserObjs);
+    });
+}
+
+function constructJSON(parsedRDF) {
+  //populating classes
+  for (let i = 0; i < parserObjs.length; i++) {
+    if (parserObjs[i].object.value == classVal) {
+      classCount++;
+      classes.push({
+        value: parserObjs[i].subject.value,
+        subclasses: [],
+        superclasses: [],
+        properties: [{ name: "", value: [] }],
+      });
+    }
+  }
+
+  //populating the subclasses and properties
+  for (let i = 0; i < parserObjs.length; i++) {
+    const subclasss =
+      parserObjs[i].predicate.value == subClassVal &&
+      edamRe.test(parserObjs[i].object.value);
+
+    const subclassRelation =
+      parserObjs[i].predicate.value == subClassVal &&
+      parserObjs[i].object.termType == "BlankNode";
+
+    //handling subclasses+blank nodes
+    if (subclassRelation) {
+      const classValue = classes.find(
+        (x) => x.value === parserObjs[i].subject.value
+      );
+      const relationName = parserObjs[i + 1].object.value.split("/").pop();
+
+      if (relationName in classValue)
+        classValue[relationName].push(parserObjs[i + 2].object.value);
+      else classValue[relationName] = [parserObjs[i + 2].object.value];
+    } else if (subclasss) {
+      //updating the subclass
+      /*classes
+            .find((x) => x.value === parserObjs[i].subject.value)
+            ?.superclasses.push({ value: parserObjs[i].object.value });*/
+
+      //updating the superclass
+      classes
+        .find((x) => x.value === parserObjs[i].object.value)
+        ?.subclasses.push({ value: parserObjs[i].subject.value });
+    }
+
+    //parsing properties
+    else if (
+      (parserObjs[i].predicate.value != subClassVal) |
+      (parserObjs[i].predicate.value != classVal)
+    ) {
+      const propName = parserObjs[i].predicate.value.split("#")[1];
+      const classValue = classes.find(
+        (x) => x.value === parserObjs[i].subject.value
+      );
+
+      if (!classValue) continue;
+
+      const propValue = classValue.properties.find((x) => x.name === propName);
+
+      if (propValue) {
+        propValue.value.push(parserObjs[i].object.value);
+      } else
+        classValue.properties.push({
+          name: propName,
+          value: [parserObjs[i].object.value],
         });
-      }
     }
+  }
 
-    //populating the subclasses and properties
-    for (let i = 0; i < parserObjs.length; i++) {
-      if (
-        parserObjs[i].predicate.value == subClassVal &&
-        edamRe.test(parserObjs[i].object.value)
-      ) {
-        //updating the subclass
-        /*classes
-        .find((x) => x.value === parserObjs[i].subject.value)
-        ?.superclasses.push({ value: parserObjs[i].object.value });*/
-
-        //updating the superclass
-
-        classes
-          .find((x) => x.value === parserObjs[i].object.value)
-          ?.subclasses.push({ value: parserObjs[i].subject.value });
-      }
-      //parsing properties
-      else if (
-        (parserObjs[i].predicate.value != subClassVal) |
-        (parserObjs[i].predicate.value != classVal)
-      ) {
-        const propName = parserObjs[i].predicate.value.split("#")[1];
-        const classValue = classes.find(
-          (x) => x.value === parserObjs[i].subject.value
-        );
-
-        if (!classValue) continue;
-
-        const propValue = classValue.properties.find(
-          (x) => x.name === propName
-        );
-
-        if (propValue) {
-          propValue.value.push(parserObjs[i].object.value);
-        } else
-          classValue.properties.push({
-            name: propName,
-            value: [parserObjs[i].object.value],
-          });
-      }
-    }
+  var file = fs.createWriteStream("before.json");
+  file.on("error", function (err) {
+    /* error handling */
   });
+  parserObjs.forEach(function (v) {
+    file.write(JSON.stringify(v) + "\n");
+  });
+  file.end();
 
+  var file = fs.createWriteStream("after.json");
+  file.on("error", function (err) {
+    /* error handling */
+  });
+  classes.forEach(function (v) {
+    file.write(JSON.stringify(v) + "\n");
+  });
+  file.end();
+}
 /*exports.parseOWL = (file) => {
   fs.createReadStream(file)
     .pipe(myParser)
