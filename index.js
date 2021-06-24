@@ -114,6 +114,9 @@ function makeTree(nodes) {
   let dataTree = [];
 
   nodes.forEach((nodesCpy) => {
+    //omitting superclasses and subclasses from the generated json file
+    delete hashTable[nodesCpy.value].superclasses;
+    delete hashTable[nodesCpy.value].subclasses;
     if (nodesCpy.superclasses.length > 0) {
       nodesCpy.superclasses.forEach((parent) => {
         hashTable[parent.value].children.push(hashTable[nodesCpy.value]);
