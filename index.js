@@ -69,9 +69,9 @@ function constructJSON(parsedRDF) {
       //parsing normal subclasses
     } else if (subclasss) {
       //updating the subclass
-      /*classes
-            .find((x) => x.value === parserObjs[i].subject.value)
-            ?.superclasses.push({ value: parserObjs[i].object.value });*/
+      classes
+        .find((x) => x.value === parserObjs[i].subject.value)
+        ?.superclasses.push({ value: parserObjs[i].object.value });
 
       //updating the superclass
       classes
@@ -82,6 +82,7 @@ function constructJSON(parsedRDF) {
     //parsing properties
     else if (property) {
       const propName = parserObjs[i].predicate.value.split("#")[1];
+      const propValue = parserObjs[i].object.value;
       const classValue = classes.find(
         (x) => x.value === parserObjs[i].subject.value
       );
@@ -89,8 +90,8 @@ function constructJSON(parsedRDF) {
       if (!classValue | !propName) continue;
 
       if (propName in classValue.properties)
-        classValue.properties[propName].push(parserObjs[i].object.value);
-      else classValue.properties[propName] = [parserObjs[i].object.value];
+        classValue.properties[propName].push(propValue);
+      else classValue.properties[propName] = [propValue];
     }
   }
 
