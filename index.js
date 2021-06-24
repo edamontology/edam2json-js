@@ -4,7 +4,11 @@ import * as fs from "fs";
 const classVal = "http://www.w3.org/2002/07/owl#Class";
 const subClassVal = "http://www.w3.org/2000/01/rdf-schema#subClassOf";
 
-var edamRe = new RegExp("^(http|https)://edamontology.org/", "i");
+//current supported classes top level (topic, data, operation, format, deprecated)
+var edamRe = new RegExp(
+  "^((http|https)://edamontology.org/(data|format|operation|topic)|http://www.w3.org/2002/07/owl#DeprecatedClass)",
+  "i"
+);
 
 let parserObjs = [];
 let classes = [];
@@ -34,6 +38,7 @@ function constructJSON(parsedRDF) {
     const subclass =
       parserObjs[i].predicate.value == subClassVal &&
       edamRe.test(parserObjs[i].object.value);
+    parserObjs[i].object.value == classVal;
 
     const subclassRelation =
       parserObjs[i].predicate.value == subClassVal &&
@@ -45,7 +50,10 @@ function constructJSON(parsedRDF) {
       edamRe.test(parserObjs[i].subject.value);
 
     //parsing the nodes
-    if (parserObjs[i].object.value == classVal) {
+    if (
+      parserObjs[i].object.value == classVal &&
+      edamRe.test(parserObjs[i].subject.value)
+    ) {
       //if the node doesn't exist, create it
       findNode(parserObjs[i].subject.value);
     }
@@ -82,24 +90,6 @@ function constructJSON(parsedRDF) {
       else nodeValue.properties[propName] = [propValue];
     }
   }
-
-  var file = fs.createWriteStream("parsedRDF.json");
-  file.on("error", function (err) {
-    /* error handling */
-  });
-  parserObjs.forEach(function (v) {
-    file.write(JSON.stringify(v) + "\n");
-  });
-  file.end();
-
-  var file = fs.createWriteStream("parsedJSON.json");
-  file.on("error", function (err) {
-    /* error handling */
-  });
-  classes.forEach(function (v) {
-    file.write(JSON.stringify(v) + "\n");
-  });
-  file.end();
 }
 
 /**
@@ -109,26 +99,24 @@ function constructJSON(parsedRDF) {
 function makeTree(nodes) {
   let hashTable = Object.create(null);
   nodes.forEach(
-    (aData) => (hashTable[aData.value] = { ...aData, children: [] })
+    (nodesCpy) => (hashTable[nodesCpy.value] = { ...nodesCpy, children: [] })
   );
   let dataTree = [];
 
-  nodes.forEach((aData) => {
-    if (aData.superclasses.length > 0) {
-      aData.superclasses.forEach((parent) => {
-        console.log(parent.value);
-
-        hashTable[parent.value].children.push(hashTable[aData.value]);
+  nodes.forEach((nodesCpy) => {
+    if (nodesCpy.superclasses.length > 0) {
+      nodesCpy.superclasses.forEach((parent) => {
+        hashTable[parent.value].children.push(hashTable[nodesCpy.value]);
       });
-    } else dataTree.push(hashTable[aData.value]);
+    } else dataTree.push(hashTable[nodesCpy.value]);
   });
   let treeRoot = { children: dataTree };
+
   var file = fs.createWriteStream("tree.json");
   file.on("error", function (err) {
     /* error handling */
   });
   file.write(JSON.stringify(treeRoot));
-
   file.end();
 
   return dataTree;
