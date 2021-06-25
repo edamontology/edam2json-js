@@ -1,6 +1,5 @@
 import { RdfXmlParser } from "rdfxml-streaming-parser";
 import * as fs from "fs";
-import { writeJSONFile } from "./utils";
 
 import { writeJSONFile } from "./utils.js";
 
@@ -16,14 +15,12 @@ var edamRe = new RegExp(
 let classes = [];
 const myParser = new RdfXmlParser();
 
-parseToJSON("EDAM_1.25.owl");
-
 /**
  *
  * @param {string} fileExt relative path of the file to parse
  * parses an OWL EDAM file to a json format
  */
-function parseToJSON(fileExt) {
+const parseToJSON = (fileExt) => {
   let parserObjs = [];
   fs.createReadStream(fileExt)
     .pipe(myParser)
@@ -36,16 +33,16 @@ function parseToJSON(fileExt) {
       constructJSON(parserObjs);
       let tree = makeTree(classes);
     });
-}
+};
 
 /**
  *
  * @param {object[]} parsedRDF array of parsed RDF objects
  * construct a json tree compliant with EDAM schema
  */
-function constructJSON(parsedRDF) {
+const constructJSON = (parsedRDF) => {
   //populating the classes array
-  for (let i = 0; i < parserObjs.length; i++) {
+  for (let i = 0; i < parsedRDF.length; i++) {
     const subclass =
       parsedRDF[i].predicate.value == subClassVal &&
       edamRe.test(parsedRDF[i].object.value);
@@ -62,7 +59,7 @@ function constructJSON(parsedRDF) {
 
     //parsing the nodes
     if (
-      parserObjs[i].object.value == classVal &&
+      parsedRDF[i].object.value == classVal &&
       edamRe.test(parsedRDF[i].subject.value)
     ) {
       //if the node doesn't exist, create it
@@ -103,13 +100,13 @@ function constructJSON(parsedRDF) {
       } else nodeValue[propName] = propValue;
     }
   }
-}
+};
 
 /**
  *
  * @param {object[]} nodes array of all nodes (flattened)
  */
-function makeTree(nodes) {
+const makeTree = (nodes) => {
   let hashTable = Object.create(null);
   nodes.forEach(
     (nodesCpy) => (hashTable[nodesCpy.value] = { children: [], ...nodesCpy })
@@ -135,19 +132,19 @@ function makeTree(nodes) {
   writeJSONFile(treeRoot);
 
   return dataTree;
-}
+};
 
 /**
  *
  * @param {string} uri the uri of the node to be created
  */
-function createNode(uri) {
+const createNode = (uri) => {
   classes.push({
     value: uri,
     subclasses: [],
     superclasses: [],
   });
-}
+};
 
 /**
  *
@@ -155,11 +152,13 @@ function createNode(uri) {
  * @returns the node value in the array
  * finds a node in the classes array. And if it doesn't exit, creates one
  */
-function findNode(uri) {
+const findNode = (uri) => {
   let nodeValue = classes.find((x) => x.value === uri);
   if (!nodeValue) {
     createNode(uri);
     return classes.find((x) => x.value === uri);
   }
   return nodeValue;
-}
+};
+
+export { parseToJSON };
