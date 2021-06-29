@@ -5,10 +5,8 @@
   "main": "index.js",
   "type": "module",
   "dependencies": {
-    "axios": "^0.21.1",
     "commander": "^8.0.0",
     "inherits": "^2.0.4",
-    "n3": "^1.10.0",
     "queue-microtask": "^1.2.3",
     "rdf-data-factory": "^1.0.4",
     "rdf-js": "^4.0.2",
