@@ -1,11 +1,15 @@
 import { parseToJSON } from "./src/parser.js";
 import { program } from "commander";
-import * as fs from "fs";
+import axios from "axios";
+
+const jsonTreeFromURL = (url) => {
+  axios.get(url).then((resp) => {
+    parseToJSON(resp.data);
+  });
+};
 
 const jsonTreeFromFile = (fileExt) => {
-  //string, not file will be passed
-  var text = fs.readFileSync(fileExt, "utf-8");
-  parseToJSON(text);
+  parseToJSON(resp.data);
 };
 
 const parseRDF = (fileExt) => {};
@@ -24,6 +28,8 @@ program.option(
 
 program.parse();
 
-jsonTreeFromFile("EDAM_1.25.owl");
+jsonTreeFromURL(
+  "https://raw.githubusercontent.com/edamontology/edamontology/main/releases/EDAM_1.25.owl"
+);
 
-export { jsonTreeFromFile, parseRDF };
+export { jsonTreeFromFile, jsonTreeFromURL, parseRDF };

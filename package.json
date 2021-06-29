@@ -5,6 +5,7 @@
   "main": "index.js",
   "type": "module",
   "dependencies": {
+    "axios": "^0.21.1",
     "commander": "^8.0.0",
     "inherits": "^2.0.4",
     "queue-microtask": "^1.2.3",
