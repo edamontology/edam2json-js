@@ -1,6 +1,4 @@
 import { RdfXmlParser } from "rdfxml-streaming-parser";
-import * as fs from "fs";
-
 import { writeJSONFile } from "./utils.js";
 
 const classVal = "http://www.w3.org/2002/07/owl#Class";
@@ -17,13 +15,14 @@ const myParser = new RdfXmlParser();
 
 /**
  *
- * @param {string} fileExt relative path of the file to parse
+ * @param {string} text file as a string
  * parses an OWL EDAM file to a json format
  */
-const parseToJSON = (fileExt) => {
+const parseToJSON = (text) => {
+  var textByLine = text.split("\n");
+
   let parserObjs = [];
-  fs.createReadStream(fileExt)
-    .pipe(myParser)
+  myParser
     .on("data", (data) => {
       parserObjs.push(data);
     })
@@ -33,6 +32,12 @@ const parseToJSON = (fileExt) => {
       constructJSON(parserObjs);
       let tree = makeTree(classes);
     });
+
+  textByLine.forEach((textLine) => {
+    myParser.write(textLine);
+  });
+
+  myParser.end();
 };
 
 /**
