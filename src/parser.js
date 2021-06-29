@@ -1,5 +1,4 @@
 import { RdfXmlParser } from "rdfxml-streaming-parser";
-import { writeJSONFile } from "./utils.js";
 
 const classVal = "http://www.w3.org/2002/07/owl#Class";
 const subClassVal = "http://www.w3.org/2000/01/rdf-schema#subClassOf";
@@ -14,11 +13,11 @@ let classes = [];
 const myParser = new RdfXmlParser();
 
 /**
- *
+ * Parses an OWL EDAM file to a json format.
  * @param {string} text file as a string
- * parses an OWL EDAM file to a json format
+ *
  */
-const parseToJSON = (text) => {
+const parseToJSON = (text, callback) => {
   var textByLine = text.split("\n");
 
   let parserObjs = [];
@@ -30,7 +29,8 @@ const parseToJSON = (text) => {
     .on("end", () => {
       console.log("All triples were parsed!");
       constructJSON(parserObjs);
-      let tree = makeTree(classes);
+      const tree = makeTree(classes);
+      callback(tree);
     });
 
   textByLine.forEach((textLine) => {
@@ -41,9 +41,9 @@ const parseToJSON = (text) => {
 };
 
 /**
- *
+ * Constructs a json tree compliant with EDAM schema.
  * @param {object[]} parsedRDF array of parsed RDF objects
- * construct a json tree compliant with EDAM schema
+ *
  */
 const constructJSON = (parsedRDF) => {
   //populating the classes array
@@ -108,7 +108,7 @@ const constructJSON = (parsedRDF) => {
 };
 
 /**
- *
+ * Turns an array of json objects to a tree using superclasses and subclasses.
  * @param {object[]} nodes array of all nodes (flattened)
  */
 const makeTree = (nodes) => {
@@ -134,9 +134,7 @@ const makeTree = (nodes) => {
     meta: { date: "18.06.2020 09:15 UTC", version: "1.25" },
   };
 
-  writeJSONFile(treeRoot);
-
-  return dataTree;
+  return treeRoot;
 };
 
 /**
@@ -152,10 +150,10 @@ const createNode = (uri) => {
 };
 
 /**
- *
+ * Finds a node in the classes array. And if it doesn't exit, creates one.
  * @param {string} uri the uri of the node to be created
  * @returns the node value in the array
- * finds a node in the classes array. And if it doesn't exit, creates one
+ *
  */
 const findNode = (uri) => {
   let nodeValue = classes.find((x) => x.value === uri);
