@@ -111,6 +111,7 @@ const constructJSON = (parsedRDF) => {
       if (propName in nodeValue) {
         nodeValue[propName] = [nodeValue[propName]];
         nodeValue[propName].push(propValue);
+        nodeValue[propName] = nodeValue[propName].flat();
       } else nodeValue[propName] = propValue;
     }
   }
