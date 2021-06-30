@@ -85,7 +85,7 @@ const constructJSON = (parsedRDF) => {
       findNode(parsedRDF[i].subject.value);
     }
 
-    //parsing subclasses+blank nodes
+    //parsing subclasses+blank nodes e.g has_topic, is_identifier_of etc.
     else if (subclassRelation) {
       let nodeValue = findNode(parsedRDF[i].subject.value);
       const relationName = parsedRDF[i + 1].object.value.split("/").pop();
@@ -115,7 +115,7 @@ const constructJSON = (parsedRDF) => {
 
       if (!propName) continue;
 
-      //create an array if property has more than one value
+      //create an array if the property has more than one value
       if (propName in nodeValue) {
         nodeValue[propName] = [nodeValue[propName]];
         nodeValue[propName].push(propValue);
@@ -123,7 +123,7 @@ const constructJSON = (parsedRDF) => {
       } else nodeValue[propName] = propValue;
     }
 
-    //populating meta data
+    //populating the ontology's meta data, add to metaMap for more meta data
     else if (parsedRDF[i].predicate.value in metaMap) {
       meta[metaMap[parsedRDF[i].predicate.value]] = parsedRDF[i].object.value;
     }
@@ -156,8 +156,6 @@ const makeTree = (nodes) => {
     data: { uri: "owl:Thing" },
     meta: meta,
   };
-  writeJSONFile(treeRoot);
-
   return treeRoot;
 };
 
