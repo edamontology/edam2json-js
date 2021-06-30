@@ -9,12 +9,20 @@ const schemMap = {
   hasExactSynonym: "exact_synonyms",
   hasNarrowSynonym: "narrow_synonyms",
 };
+
+//map for meta data for the whole ontology
+const metaMap = {
+  "http://purl.obolibrary.org/obo/date": "date",
+  "http://usefulinc.com/ns/doap#Version": "version",
+};
+
 //current supported classes top level (topic, data, operation, format, deprecated)
 var edamRe = new RegExp(
   "^((http|https)://edamontology.org/(data|format|operation|topic)|http://www.w3.org/2002/07/owl#DeprecatedClass)",
   "i"
 );
 
+let meta = {};
 let classes = [];
 const myParser = new RdfXmlParser();
 
@@ -114,6 +122,11 @@ const constructJSON = (parsedRDF) => {
         nodeValue[propName] = nodeValue[propName].flat();
       } else nodeValue[propName] = propValue;
     }
+
+    //populating meta data
+    else if (parsedRDF[i].predicate.value in metaMap) {
+      meta[metaMap[parsedRDF[i].predicate.value]] = parsedRDF[i].object.value;
+    }
   }
 };
 
@@ -141,9 +154,8 @@ const makeTree = (nodes) => {
   let treeRoot = {
     children: dataTree,
     data: { uri: "owl:Thing" },
-    meta: { date: "18.06.2020 09:15 UTC", version: "1.25" },
+    meta: meta,
   };
-
   writeJSONFile(treeRoot);
 
   return treeRoot;
