@@ -1,7 +1,23 @@
 import { RdfXmlParser } from "rdfxml-streaming-parser";
-
+import { writeJSONFile } from "./utils.js";
 const classVal = "http://www.w3.org/2002/07/owl#Class";
 const subClassVal = "http://www.w3.org/2000/01/rdf-schema#subClassOf";
+
+const schemMap = {
+  hasDefinition: "definition",
+  label: "text",
+  hasExactSynonym: "exact_synonyms",
+  hasNarrowSynonym: "narrow_synonyms",
+};
+
+//map for meta data for the whole ontology
+const metaMap = {
+  "http://purl.obolibrary.org/obo/date": "date",
+  "http://usefulinc.com/ns/doap#Version": "version",
+  "http://purl.obolibrary.org/obo/edam#repository": "repository",
+  "http://xmlns.com/foaf/0.1/logo": "logo",
+  "http://xmlns.com/foaf/0.1/page": "homepage",
+};
 
 //current supported classes top level (topic, data, operation, format, deprecated)
 var edamRe = new RegExp(
@@ -9,6 +25,7 @@ var edamRe = new RegExp(
   "i"
 );
 
+let meta = {};
 let classes = [];
 const myParser = new RdfXmlParser();
 
@@ -71,7 +88,7 @@ const constructJSON = (parsedRDF) => {
       findNode(parsedRDF[i].subject.value);
     }
 
-    //parsing subclasses+blank nodes
+    //parsing subclasses+blank nodes e.g has_topic, is_identifier_of etc.
     else if (subclassRelation) {
       let nodeValue = findNode(parsedRDF[i].subject.value);
       const relationName = parsedRDF[i + 1].object.value.split("/").pop();
@@ -84,25 +101,34 @@ const constructJSON = (parsedRDF) => {
     else if (subclass) {
       //updating the subclass
       let nodeValue = findNode(parsedRDF[i].subject.value);
-      nodeValue.superclasses.push({ value: parsedRDF[i].object.value });
+      nodeValue.superclasses.push(parsedRDF[i].object.value);
 
       //updating the superclass
       nodeValue = findNode(parsedRDF[i].object.value);
-      nodeValue.subclasses.push({ value: parsedRDF[i].subject.value });
+      nodeValue.subclasses.push(parsedRDF[i].subject.value);
     }
     //parsing properties
     else if (property) {
-      const propName = parsedRDF[i].predicate.value.split("#")[1];
+      let propName = parsedRDF[i].predicate.value.split("#")[1];
+      if (propName in schemMap) {
+        propName = schemMap[propName];
+      }
       const propValue = parsedRDF[i].object.value;
       const nodeValue = findNode(parsedRDF[i].subject.value);
 
       if (!propName) continue;
 
-      //create an array if property has more than one value
+      //create an array if the property has more than one value
       if (propName in nodeValue) {
         nodeValue[propName] = [nodeValue[propName]];
         nodeValue[propName].push(propValue);
+        nodeValue[propName] = nodeValue[propName].flat();
       } else nodeValue[propName] = propValue;
+    }
+
+    //populating the ontology's meta data, add to metaMap for more meta data
+    else if (parsedRDF[i].predicate.value in metaMap) {
+      meta[metaMap[parsedRDF[i].predicate.value]] = parsedRDF[i].object.value;
     }
   }
 };
@@ -114,26 +140,25 @@ const constructJSON = (parsedRDF) => {
 const makeTree = (nodes) => {
   let hashTable = Object.create(null);
   nodes.forEach(
-    (nodesCpy) => (hashTable[nodesCpy.value] = { children: [], ...nodesCpy })
+    (nodesCpy) => (hashTable[nodesCpy.data.uri] = { children: [], ...nodesCpy })
   );
   let dataTree = [];
 
   nodes.forEach((nodesCpy) => {
     //omitting superclasses and subclasses from the generated json file
-    delete hashTable[nodesCpy.value].superclasses;
-    delete hashTable[nodesCpy.value].subclasses;
+    delete hashTable[nodesCpy.data.uri].superclasses;
+    delete hashTable[nodesCpy.data.uri].subclasses;
     if (nodesCpy.superclasses.length > 0) {
       nodesCpy.superclasses.forEach((parent) => {
-        hashTable[parent.value].children.push(hashTable[nodesCpy.value]);
+        hashTable[parent].children.push(hashTable[nodesCpy.data.uri]);
       });
-    } else dataTree.push(hashTable[nodesCpy.value]);
+    } else dataTree.push(hashTable[nodesCpy.data.uri]);
   });
   let treeRoot = {
     children: dataTree,
     data: { uri: "owl:Thing" },
-    meta: { date: "18.06.2020 09:15 UTC", version: "1.25" },
+    meta: meta,
   };
-
   return treeRoot;
 };
 
@@ -141,9 +166,9 @@ const makeTree = (nodes) => {
  *
  * @param {string} uri the uri of the node to be created
  */
-const createNode = (uri) => {
+const createNode = (uriVal) => {
   classes.push({
-    value: uri,
+    data: { uri: uriVal },
     subclasses: [],
     superclasses: [],
   });
@@ -156,10 +181,10 @@ const createNode = (uri) => {
  *
  */
 const findNode = (uri) => {
-  let nodeValue = classes.find((x) => x.value === uri);
+  let nodeValue = classes.find((x) => x.data.uri === uri);
   if (!nodeValue) {
     createNode(uri);
-    return classes.find((x) => x.value === uri);
+    return classes.find((x) => x.data.uri === uri);
   }
   return nodeValue;
 };
