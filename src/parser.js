@@ -14,6 +14,9 @@ const schemMap = {
 const metaMap = {
   "http://purl.obolibrary.org/obo/date": "date",
   "http://usefulinc.com/ns/doap#Version": "version",
+  "http://purl.obolibrary.org/obo/edam#repository": "repository",
+  "http://xmlns.com/foaf/0.1/logo": "logo",
+  "http://xmlns.com/foaf/0.1/page": "homepage",
 };
 
 //current supported classes top level (topic, data, operation, format, deprecated)
