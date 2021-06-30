@@ -1,8 +1,14 @@
 import { RdfXmlParser } from "rdfxml-streaming-parser";
-
+import { writeJSONFile } from "./utils.js";
 const classVal = "http://www.w3.org/2002/07/owl#Class";
 const subClassVal = "http://www.w3.org/2000/01/rdf-schema#subClassOf";
 
+const schemMap = {
+  hasDefinition: "definition",
+  label: "text",
+  hasExactSynonym: "exact_synonyms",
+  hasNarrowSynonym: "narrow_synonyms",
+};
 //current supported classes top level (topic, data, operation, format, deprecated)
 var edamRe = new RegExp(
   "^((http|https)://edamontology.org/(data|format|operation|topic)|http://www.w3.org/2002/07/owl#DeprecatedClass)",
@@ -84,15 +90,18 @@ const constructJSON = (parsedRDF) => {
     else if (subclass) {
       //updating the subclass
       let nodeValue = findNode(parsedRDF[i].subject.value);
-      nodeValue.superclasses.push({ value: parsedRDF[i].object.value });
+      nodeValue.superclasses.push(parsedRDF[i].object.value);
 
       //updating the superclass
       nodeValue = findNode(parsedRDF[i].object.value);
-      nodeValue.subclasses.push({ value: parsedRDF[i].subject.value });
+      nodeValue.subclasses.push(parsedRDF[i].subject.value);
     }
     //parsing properties
     else if (property) {
-      const propName = parsedRDF[i].predicate.value.split("#")[1];
+      let propName = parsedRDF[i].predicate.value.split("#")[1];
+      if (propName in schemMap) {
+        propName = schemMap[propName];
+      }
       const propValue = parsedRDF[i].object.value;
       const nodeValue = findNode(parsedRDF[i].subject.value);
 
@@ -114,25 +123,27 @@ const constructJSON = (parsedRDF) => {
 const makeTree = (nodes) => {
   let hashTable = Object.create(null);
   nodes.forEach(
-    (nodesCpy) => (hashTable[nodesCpy.value] = { children: [], ...nodesCpy })
+    (nodesCpy) => (hashTable[nodesCpy.data.uri] = { children: [], ...nodesCpy })
   );
   let dataTree = [];
 
   nodes.forEach((nodesCpy) => {
     //omitting superclasses and subclasses from the generated json file
-    delete hashTable[nodesCpy.value].superclasses;
-    delete hashTable[nodesCpy.value].subclasses;
+    delete hashTable[nodesCpy.data.uri].superclasses;
+    delete hashTable[nodesCpy.data.uri].subclasses;
     if (nodesCpy.superclasses.length > 0) {
       nodesCpy.superclasses.forEach((parent) => {
-        hashTable[parent.value].children.push(hashTable[nodesCpy.value]);
+        hashTable[parent].children.push(hashTable[nodesCpy.data.uri]);
       });
-    } else dataTree.push(hashTable[nodesCpy.value]);
+    } else dataTree.push(hashTable[nodesCpy.data.uri]);
   });
   let treeRoot = {
     children: dataTree,
     data: { uri: "owl:Thing" },
     meta: { date: "18.06.2020 09:15 UTC", version: "1.25" },
   };
+
+  writeJSONFile(treeRoot);
 
   return treeRoot;
 };
@@ -141,9 +152,9 @@ const makeTree = (nodes) => {
  *
  * @param {string} uri the uri of the node to be created
  */
-const createNode = (uri) => {
+const createNode = (uriVal) => {
   classes.push({
-    value: uri,
+    data: { uri: uriVal },
     subclasses: [],
     superclasses: [],
   });
@@ -156,10 +167,10 @@ const createNode = (uri) => {
  *
  */
 const findNode = (uri) => {
-  let nodeValue = classes.find((x) => x.value === uri);
+  let nodeValue = classes.find((x) => x.data.uri === uri);
   if (!nodeValue) {
     createNode(uri);
-    return classes.find((x) => x.value === uri);
+    return classes.find((x) => x.data.uri === uri);
   }
   return nodeValue;
 };
