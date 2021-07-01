@@ -44,11 +44,17 @@ const parseToJSON = (text, callback) => {
     .on("error", console.error)
     .on("end", () => {
       console.log("All triples were parsed!");
+      //onsole.timeEnd("parse");
+      console.time("loop");
       constructJSON(parserObjs);
+      console.timeEnd("loop");
+      //console.time("tree");
       const tree = makeTree(classes);
+      //console.timeEnd("tree");
       callback(tree);
     });
 
+  //console.time("parse");
   textByLine.forEach((textLine) => {
     myParser.write(textLine);
   });
@@ -93,10 +99,6 @@ const constructJSON = (parsedRDF) => {
       //updating the subclass
       let nodeValue = findNode(parsedRDF[i].subject.value);
       nodeValue.superclasses.push(parsedRDF[i].object.value);
-
-      //updating the superclass
-      nodeValue = findNode(parsedRDF[i].object.value);
-      nodeValue.subclasses.push(parsedRDF[i].subject.value);
     }
     //parsing properties
     else if (
