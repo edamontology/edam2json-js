@@ -1,5 +1,4 @@
 import { RdfXmlParser } from "rdfxml-streaming-parser";
-import { writeJSONFile } from "./utils.js";
 const classVal = "http://www.w3.org/2002/07/owl#Class";
 const subClassVal = "http://www.w3.org/2000/01/rdf-schema#subClassOf";
 
@@ -65,20 +64,6 @@ const parseToJSON = (text, callback) => {
 const constructJSON = (parsedRDF) => {
   //populating the classes array
   for (let i = 0; i < parsedRDF.length; i++) {
-    const subclass =
-      parsedRDF[i].predicate.value == subClassVal &&
-      edamRe.test(parsedRDF[i].object.value);
-    parsedRDF[i].object.value == classVal;
-
-    const subclassRelation =
-      parsedRDF[i].predicate.value == subClassVal &&
-      parsedRDF[i].object.termType == "BlankNode";
-
-    const property =
-      parsedRDF[i].predicate.value != subClassVal &&
-      parsedRDF[i].object.value != classVal &&
-      edamRe.test(parsedRDF[i].subject.value);
-
     //parsing the nodes
     if (
       parsedRDF[i].object.value == classVal &&
@@ -89,7 +74,10 @@ const constructJSON = (parsedRDF) => {
     }
 
     //parsing subclasses+blank nodes e.g has_topic, is_identifier_of etc.
-    else if (subclassRelation) {
+    else if (
+      parsedRDF[i].predicate.value == subClassVal &&
+      parsedRDF[i].object.termType == "BlankNode"
+    ) {
       let nodeValue = findNode(parsedRDF[i].subject.value);
       const relationName = parsedRDF[i + 1].object.value.split("/").pop();
 
@@ -98,7 +86,10 @@ const constructJSON = (parsedRDF) => {
       else nodeValue[relationName] = [parsedRDF[i + 2].object.value];
     }
     //parsing subclasses
-    else if (subclass) {
+    else if (
+      parsedRDF[i].predicate.value == subClassVal &&
+      edamRe.test(parsedRDF[i].object.value)
+    ) {
       //updating the subclass
       let nodeValue = findNode(parsedRDF[i].subject.value);
       nodeValue.superclasses.push(parsedRDF[i].object.value);
@@ -108,7 +99,11 @@ const constructJSON = (parsedRDF) => {
       nodeValue.subclasses.push(parsedRDF[i].subject.value);
     }
     //parsing properties
-    else if (property) {
+    else if (
+      parsedRDF[i].predicate.value != subClassVal &&
+      parsedRDF[i].object.value != classVal &&
+      edamRe.test(parsedRDF[i].subject.value)
+    ) {
       let propName = parsedRDF[i].predicate.value.split("#")[1];
       if (propName in schemMap) {
         propName = schemMap[propName];
