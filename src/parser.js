@@ -25,7 +25,7 @@ var edamRe = new RegExp(
 );
 
 let meta = {};
-let classes = [];
+let classes = {};
 const myParser = new RdfXmlParser();
 
 /**
@@ -44,23 +44,27 @@ const parseToJSON = (text, callback) => {
     .on("error", console.error)
     .on("end", () => {
       console.log("All triples were parsed!");
-      //onsole.timeEnd("parse");
+      console.timeEnd("parse");
       console.time("loop");
       constructJSON(parserObjs);
       console.timeEnd("loop");
-      //console.time("tree");
+      console.time("tree");
       const tree = makeTree(classes);
-      //console.timeEnd("tree");
+      console.timeEnd("tree");
       callback(tree);
     });
 
-  //console.time("parse");
+  console.time("parse");
   textByLine.forEach((textLine) => {
     myParser.write(textLine);
   });
 
   myParser.end();
 };
+
+function regTime() {
+  edamRe.test("http://purl.obolibrary.org/obo/date");
+}
 
 /**
  * Constructs a json tree compliant with EDAM schema.
@@ -76,7 +80,9 @@ const constructJSON = (parsedRDF) => {
       edamRe.test(parsedRDF[i].subject.value)
     ) {
       //if the node doesn't exist, create it
-      findNode(parsedRDF[i].subject.value);
+      if (!(parsedRDF[i].subject.value in classes)) {
+        createNode(parsedRDF[i].subject.value);
+      }
     }
 
     //parsing subclasses+blank nodes e.g has_topic, is_identifier_of etc.
@@ -84,7 +90,10 @@ const constructJSON = (parsedRDF) => {
       parsedRDF[i].predicate.value == subClassVal &&
       parsedRDF[i].object.termType == "BlankNode"
     ) {
-      let nodeValue = findNode(parsedRDF[i].subject.value);
+      if (!(parsedRDF[i].subject.value in classes)) {
+        createNode(parsedRDF[i].subject.value);
+      }
+      let nodeValue = classes[parsedRDF[i].subject.value];
       const relationName = parsedRDF[i + 1].object.value.split("/").pop();
 
       if (relationName in nodeValue)
@@ -97,7 +106,10 @@ const constructJSON = (parsedRDF) => {
       edamRe.test(parsedRDF[i].object.value)
     ) {
       //updating the subclass
-      let nodeValue = findNode(parsedRDF[i].subject.value);
+      if (!(parsedRDF[i].subject.value in classes)) {
+        createNode(parsedRDF[i].subject.value);
+      }
+      let nodeValue = classes[parsedRDF[i].subject.value];
       nodeValue.superclasses.push(parsedRDF[i].object.value);
     }
     //parsing properties
@@ -111,8 +123,10 @@ const constructJSON = (parsedRDF) => {
         propName = schemMap[propName];
       }
       const propValue = parsedRDF[i].object.value;
-      const nodeValue = findNode(parsedRDF[i].subject.value);
-
+      if (!(parsedRDF[i].subject.value in classes)) {
+        createNode(parsedRDF[i].subject.value);
+      }
+      let nodeValue = classes[parsedRDF[i].subject.value];
       if (!propName) continue;
 
       //create an array if the property has more than one value
@@ -136,20 +150,20 @@ const constructJSON = (parsedRDF) => {
  */
 const makeTree = (nodes) => {
   let hashTable = Object.create(null);
-  nodes.forEach(
-    (nodesCpy) => (hashTable[nodesCpy.data.uri] = { children: [], ...nodesCpy })
+  Object.entries(nodes).forEach(
+    ([key, value]) => (hashTable[key] = { children: [], ...value })
   );
   let dataTree = [];
 
-  nodes.forEach((nodesCpy) => {
+  Object.entries(nodes).forEach(([key, value]) => {
     //omitting superclasses and subclasses from the generated json file
-    delete hashTable[nodesCpy.data.uri].superclasses;
-    delete hashTable[nodesCpy.data.uri].subclasses;
-    if (nodesCpy.superclasses.length > 0) {
-      nodesCpy.superclasses.forEach((parent) => {
-        hashTable[parent].children.push(hashTable[nodesCpy.data.uri]);
+    delete hashTable[key].superclasses;
+    delete hashTable[key].subclasses;
+    if (value.superclasses.length > 0) {
+      value.superclasses.forEach((parent) => {
+        hashTable[parent].children.push(hashTable[key]);
       });
-    } else dataTree.push(hashTable[nodesCpy.data.uri]);
+    } else dataTree.push(hashTable[key]);
   });
   let treeRoot = {
     children: dataTree,
@@ -164,26 +178,11 @@ const makeTree = (nodes) => {
  * @param {string} uri the uri of the node to be created
  */
 const createNode = (uriVal) => {
-  classes.push({
+  classes[uriVal] = {
     data: { uri: uriVal },
     subclasses: [],
     superclasses: [],
-  });
-};
-
-/**
- * Finds a node in the classes array. And if it doesn't exit, creates one.
- * @param {string} uri the uri of the node to be created
- * @returns the node value in the array
- *
- */
-const findNode = (uri) => {
-  let nodeValue = classes.find((x) => x.data.uri === uri);
-  if (!nodeValue) {
-    createNode(uri);
-    return classes.find((x) => x.data.uri === uri);
-  }
-  return nodeValue;
+  };
 };
 
 export { parseToJSON };
