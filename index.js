@@ -1,5 +1,5 @@
 import { parseToJSON } from "./src/parser.js";
-import { program } from "commander";
+//import { program } from "commander";
 import axios from "axios";
 
 /**
@@ -27,7 +27,7 @@ const jsonTreeFromFile = (filePath) => {
  */
 const parseRDF = (filePath) => {};
 
-program.option(
+/*program.option(
   "-jt,--jsontree [edam-owl-file]",
   "Generate a json representation of the EDAM hierarchy"
 );
@@ -38,13 +38,13 @@ program.option(
   "Generate a json-ld formatted version of EDAM"
 );
 
-program.parse();
+program.parse();*/
 
-jsonTreeFromURL(
+/*jsonTreeFromURL(
   "https://raw.githubusercontent.com/edamontology/edamontology/main/EDAM_dev.owl",
   (tree) => {
     console.log(tree);
   }
-);
+);*/
 
 export { jsonTreeFromURL, parseRDF };
