@@ -48,9 +48,7 @@ const parseToJSON = (text, callback) => {
       console.time("loop");
       constructJSON(parserObjs);
       console.timeEnd("loop");
-      console.time("tree");
       const tree = makeTree(classes);
-      console.timeEnd("tree");
       callback(tree);
     });
 
@@ -61,10 +59,6 @@ const parseToJSON = (text, callback) => {
 
   myParser.end();
 };
-
-function regTime() {
-  edamRe.test("http://purl.obolibrary.org/obo/date");
-}
 
 /**
  * Constructs a json tree compliant with EDAM schema.
