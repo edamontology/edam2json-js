@@ -1,5 +1,5 @@
 {
-  "name": "edam2json",
+  "name": "edam2json-js",
   "version": "0.1.0",
   "description": "Javascript library to convert EDAM to JSON/JSON-LD",
   "main": "index.js",
