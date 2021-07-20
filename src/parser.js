@@ -34,6 +34,8 @@ let classes = {};
  */
 const parseToJSON = (text, callback) => {
   const myParser = new RdfXmlParser();
+  meta = {};
+  classes = {};
 
   var textByLine = text.split("\n");
 
