@@ -26,7 +26,6 @@ var edamRe = new RegExp(
 
 let meta = {};
 let classes = {};
-const myParser = new RdfXmlParser();
 
 /**
  * Parses an OWL EDAM file to a json format.
@@ -34,6 +33,8 @@ const myParser = new RdfXmlParser();
  *
  */
 const parseToJSON = (text, callback) => {
+  const myParser = new RdfXmlParser();
+
   var textByLine = text.split("\n");
 
   let parserObjs = [];
