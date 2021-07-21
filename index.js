@@ -40,11 +40,4 @@ program.option(
 
 program.parse();*/
 
-/*jsonTreeFromURL(
-  "https://raw.githubusercontent.com/edamontology/edamontology/main/EDAM_dev.owl",
-  (tree) => {
-    console.log(tree);
-  }
-);*/
-
 export { jsonTreeFromURL, parseRDF };
