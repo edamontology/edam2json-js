@@ -35,7 +35,7 @@ const url =
   "https://raw.githubusercontent.com/edamontology/edamontology/main/EDAM_dev.owl";
 
 jsonTreeFromURL(url, (tree) => {
-  console.log(jsonTree);
+  console.log(tree);
 });
 ```
 
