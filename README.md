@@ -28,15 +28,21 @@ const jsonTreeFromURL = require("edam2json-js").jsonTreeFromURL;
 
 ## Usage
 
-`jsonTreeFromURL` is a function that takes a url (with .owl extention) as a first argument and outputs the converted json tree to the `callback` function passed as a second argument
+`jsonTreeFromURL` is a function that takes a url (with .owl extention) as a first argument and outputs the converted json tree to the `onSuccess` function passed as a second argument. The third argument is `onError` function to be excuted in case of error (e.g CORS errors)
 
 ```javascript
 const url =
   "https://raw.githubusercontent.com/edamontology/edamontology/main/EDAM_dev.owl";
 
-jsonTreeFromURL(url, (tree) => {
-  console.log(tree);
-});
+jsonTreeFromURL(
+  url,
+  (tree) => {
+    console.log(tree);
+  },
+  (err) => {
+    console.log(err);
+  }
+);
 ```
 
 ## License
