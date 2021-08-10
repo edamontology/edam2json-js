@@ -1,8 +1,10 @@
 import * as fs from "fs";
 
-const writeJSONFile = (jsonObj) => {
-  var file = fs.createWriteStream("tree.json");
-  file.on("error", function (err) {});
+const writeJSONFile = (jsonObj, filePath) => {
+  var file = fs.createWriteStream(filePath);
+  file.on("error", function (err) {
+    console.log(err.message);
+  });
   file.write(JSON.stringify(jsonObj));
   file.end();
 };

@@ -30,9 +30,9 @@ let classes = {};
 /**
  * Parses an OWL EDAM file to a json format.
  * @param {string} text file as a string
- *
+ * @param {string} outputPath optional Output file path to write to
  */
-const parseToJSON = (text, callback) => {
+const parseToJSON = (text, callback, outputPath) => {
   const myParser = new RdfXmlParser();
   meta = {};
   classes = {};
@@ -52,7 +52,8 @@ const parseToJSON = (text, callback) => {
       constructJSON(parserObjs);
       console.timeEnd("loop");
       const tree = makeTree(classes);
-      callback(tree);
+      if (outputPath) callback(tree, outputPath);
+      else callback(tree);
     });
 
   console.time("parse");
