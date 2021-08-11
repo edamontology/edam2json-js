@@ -6,8 +6,10 @@
   "type": "module",
   "dependencies": {
     "axios": "^0.21.1",
+    "commander": "^8.1.0",
     "rdfxml-streaming-parser": "^1.4.0"
   },
+  "browser": "browser.js",
   "devDependencies": {},
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"

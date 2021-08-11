@@ -1,49 +1,34 @@
 import { parseToJSON } from "./src/parser.js";
-//import { program } from "commander";
-import axios from "axios";
-
-/**
- * Parses an OWL file to a json tree of nodes
- * @param {string} url The URL of the owl file in raw format e.g "https://raw.githubusercontent.com/edamontology/edamontology/main/releases/EDAM_1.25.owl"
- * @param {function} onSuccess The callback function to be executed after the tree is ready e.g (tree) => {console.log(tree)}
- * @param {function} onError The callback function to be executed in case of an error
- */
-const jsonTreeFromURL = (url, onSuccess, onError) => {
-  axios
-    .get(url)
-    .then((resp) => {
-      parseToJSON(resp.data, onSuccess);
-    })
-    .catch((err) => {
-      onError(err);
-    });
-};
+import { program } from "commander";
+import { writeJSONFile } from "./src/utils.js";
+import * as fs from "fs";
 
 /**
  * Parses an OWL file provided in the command line to a json tree of nodes. Outputs the tree to the console.
  * @param {string} filePath The path of the OWL file to be parsed
  */
-const jsonTreeFromFile = (filePath) => {
-  //to be implemented
+const jsonTreeFromFile = (input, output) => {
+  var owlText = fs.readFileSync(input, "utf-8");
+  parseToJSON(
+    owlText,
+    (tree, output) => {
+      if (output) writeJSONFile(tree, output);
+      else console.log(tree);
+    },
+    output
+  );
 };
 
-/**
- * Parses an OWL file provided in the command line to a list of RDFs. Outputs the list to the console.
- * @param {string} filePath The path of the OWL file to be parsed
- */
-const parseRDF = (filePath) => {};
+program
+  .version("0.1.0")
+  .description("Converts EDAM to different formats")
+  .option(
+    "-jt,--jsontree [input]",
+    "Generate a json representation of the EDAM hierarchy"
+  )
+  .option("-o [output],", "optional output file");
 
-/*program.option(
-  "-jt,--jsontree [edam-owl-file]",
-  "Generate a json representation of the EDAM hierarchy"
-);
+program.parse();
 
-//to be implemented
-program.option(
-  "-jld,--jsonld [edam-owl-file]",
-  "Generate a json-ld formatted version of EDAM"
-);
-
-program.parse();*/
-
-export { jsonTreeFromURL, parseRDF };
+const options = program.opts();
+if (options.jsontree) jsonTreeFromFile(options.jsontree, options.o);
