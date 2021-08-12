@@ -1,23 +1,5 @@
 import { RdfXmlParser } from "rdfxml-streaming-parser";
-const classVal = "http://www.w3.org/2002/07/owl#Class";
-const subClassVal = "http://www.w3.org/2000/01/rdf-schema#subClassOf";
-
-const schemMap = {
-  hasDefinition: "definition",
-  label: "text",
-  hasExactSynonym: "exact_synonyms",
-  hasNarrowSynonym: "narrow_synonyms",
-};
-
-//map for meta data for the whole ontology
-const metaMap = {
-  "http://purl.obolibrary.org/obo/date": "date",
-  "http://usefulinc.com/ns/doap#Version": "version",
-  "http://purl.obolibrary.org/obo/edam#repository": "repository",
-  "http://xmlns.com/foaf/0.1/logo": "logo",
-  "http://xmlns.com/foaf/0.1/page": "homepage",
-};
-
+import { classVal, subClassVal, schemaMap, metaMap } from "./maps.js";
 //current supported classes top level (topic, data, operation, format, deprecated)
 var edamRe = new RegExp(
   "^((http|https)://edamontology.org/(data|format|operation|topic)|http://www.w3.org/2002/07/owl#DeprecatedClass)",
@@ -116,9 +98,9 @@ const constructJSON = (parsedRDF) => {
       parsedRDF[i].object.value != classVal &&
       edamRe.test(parsedRDF[i].subject.value)
     ) {
-      let propName = parsedRDF[i].predicate.value.split("#")[1];
-      if (propName in schemMap) {
-        propName = schemMap[propName];
+      let propName = parsedRDF[i].predicate.value;
+      if (propName in schemaMap) {
+        propName = schemaMap[propName];
       }
       const propValue = parsedRDF[i].object.value;
       if (!(parsedRDF[i].subject.value in classes)) {
