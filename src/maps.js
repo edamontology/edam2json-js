@@ -47,7 +47,8 @@ const tsvMap = {
   hasHumanReadsbleId:
     "http://www.geneontology.org/formats/oboInOwl#hasHumanReadableId",
   "http://data.bioontology.org/metadata/prefixIRI": `split("/").pop();`,
-  "http://edamontology.org/comment_handle": "",
+  "http://edamontology.org/comment_handle":
+    "http://edamontology.org/comment_handle",
   "http://edamontology.org/next_id": "",
   "http://purl.obolibrary.org/obo/date": "",
   "http://purl.obolibrary.org/obo/edam#data": "",
