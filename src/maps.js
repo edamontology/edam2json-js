@@ -31,7 +31,7 @@ const tsvMap = {
   CUI: "",
   "Semantic Types": "",
   Parents: "superclasses",
-  Citation: "",
+  Citation: "http://edamontology.org/citation",
   "Created in": "http://edamontology.org/created_in",
   "deprecation candidate": "http://edamontology.org/is_deprecation_candidate",
   "deprecation comment": "http://edamontology.org/deprecation_comment",
