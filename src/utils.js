@@ -9,4 +9,12 @@ const writeJSONFile = (jsonObj, filePath) => {
   file.end();
 };
 
-export { writeJSONFile };
+const writeFile = (tsvText, filePath) => {
+  var file = fs.createWriteStream(filePath);
+  file.on("error", function (err) {
+    console.log(err.message);
+  });
+  file.write(tsvText);
+  file.end();
+};
+export { writeJSONFile, writeFile };

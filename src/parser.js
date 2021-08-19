@@ -1,23 +1,5 @@
 import { RdfXmlParser } from "rdfxml-streaming-parser";
-const classVal = "http://www.w3.org/2002/07/owl#Class";
-const subClassVal = "http://www.w3.org/2000/01/rdf-schema#subClassOf";
-
-const schemMap = {
-  hasDefinition: "definition",
-  label: "text",
-  hasExactSynonym: "exact_synonyms",
-  hasNarrowSynonym: "narrow_synonyms",
-};
-
-//map for meta data for the whole ontology
-const metaMap = {
-  "http://purl.obolibrary.org/obo/date": "date",
-  "http://usefulinc.com/ns/doap#Version": "version",
-  "http://purl.obolibrary.org/obo/edam#repository": "repository",
-  "http://xmlns.com/foaf/0.1/logo": "logo",
-  "http://xmlns.com/foaf/0.1/page": "homepage",
-};
-
+import { classVal, subClassVal, schemaMap, metaMap, tsvMap } from "./maps.js";
 //current supported classes top level (topic, data, operation, format, deprecated)
 var edamRe = new RegExp(
   "^((http|https)://edamontology.org/(data|format|operation|topic)|http://www.w3.org/2002/07/owl#DeprecatedClass)",
@@ -54,6 +36,45 @@ const parseToJSON = (text, callback, outputPath) => {
       const tree = makeTree(classes);
       if (outputPath) callback(tree, outputPath);
       else callback(tree);
+    });
+
+  console.time("parse");
+  textByLine.forEach((textLine) => {
+    myParser.write(textLine);
+  });
+
+  myParser.end();
+};
+
+/**
+ * Parses an OWL EDAM file to a tsv format or csv
+ * @param {string} text file as a string
+ * @param {function any(string) {}} callback function to call in case of success
+ * @param {string} seperator seperator according to type of file needed either ',' or '/t'
+ * @param {string} outputPath optional Output file path to write to
+ */
+const parseToTable = (text, callback, seperator, outputPath) => {
+  const myParser = new RdfXmlParser();
+  meta = {};
+  classes = {};
+
+  var textByLine = text.split("\n");
+
+  let parserObjs = [];
+  myParser
+    .on("data", (data) => {
+      parserObjs.push(data);
+    })
+    .on("error", console.error)
+    .on("end", () => {
+      console.log("All triples were parsed!");
+      console.timeEnd("parse");
+      console.time("loop");
+      constructJSON(parserObjs);
+      console.timeEnd("loop");
+      const text = makeTSV(seperator, classes);
+      if (outputPath) callback(text, outputPath);
+      else callback(text);
     });
 
   console.time("parse");
@@ -116,9 +137,9 @@ const constructJSON = (parsedRDF) => {
       parsedRDF[i].object.value != classVal &&
       edamRe.test(parsedRDF[i].subject.value)
     ) {
-      let propName = parsedRDF[i].predicate.value.split("#")[1];
-      if (propName in schemMap) {
-        propName = schemMap[propName];
+      let propName = parsedRDF[i].predicate.value;
+      if (propName in schemaMap) {
+        propName = schemaMap[propName];
       }
       const propValue = parsedRDF[i].object.value;
       if (!(parsedRDF[i].subject.value in classes)) {
@@ -172,15 +193,48 @@ const makeTree = (nodes) => {
 };
 
 /**
+ * Turns an array of json objects to a tsv/csv string.
+ * @param {string}  seperator type of seperator either ',' or '/t'
+ * @param {object[]} nodes array of all nodes (flattened)
+ */
+const makeTSV = (seperator, nodes) => {
+  let text = "";
+  for (const prop in tsvMap) {
+    text += prop + seperator;
+  }
+  text += "\n";
+
+  Object.entries(nodes).forEach(([key, value]) => {
+    for (const prop in tsvMap) {
+      let mapProp = tsvMap[prop];
+      if (mapProp != "") {
+        text += value[mapProp]
+          ? Array.isArray(value[mapProp])
+            ? value[mapProp].filter((item) => item).join("|") + seperator
+            : value[mapProp] + seperator
+          : seperator;
+      } else {
+        text += seperator;
+      }
+    }
+    text += "\n";
+  });
+  return text;
+};
+
+/**
  *
  * @param {string} uri the uri of the node to be created
  */
 const createNode = (uriVal) => {
+  const prefixID = uriVal.split("/").pop();
   classes[uriVal] = {
     data: { uri: uriVal },
+    uri: uriVal,
+    prefixID: prefixID,
     subclasses: [],
     superclasses: [],
   };
 };
 
-export { parseToJSON };
+export { parseToJSON, parseToTable };
