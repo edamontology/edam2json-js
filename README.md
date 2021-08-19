@@ -1,6 +1,6 @@
 # edam2json-js
 
-Javascript library to convert EDAM to different formats JSON/tsv/csv.
+Javascript library to convert EDAM to different formats JSON/TSV/CSV.
 Used both as a cli and a browser-compatible package.
 
 ## Installation
@@ -54,13 +54,13 @@ jsonTreeFromURL(
 
 ### As a cli
 
-For conerting OWL file to json tree of terms.
+For converting OWL file to json tree of terms.
 
 ```
 edam2json-js -jt EDAM_FILE_PATH [-o OUTPUT_FILE]
 ```
 
-For conerting OWL file to csv/tsv format.
+For converting OWL file to csv/tsv format.
 
 ```bash
 edam2json-js -csv EDAM_FILE_PATH [-o OUTPUT_FILE]
