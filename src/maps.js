@@ -23,9 +23,9 @@ const metaMap = {
 
 //map for tsv/csv headers and their approriate parsed keys
 const tsvMap = {
-  "Class ID": "data.uri",
+  "Class ID": "uri",
   "Preferred Label": "text",
-  Synonyms: ["exact_synonyms", "narrow_synonyms"],
+  Synonyms: "exact_synonyms",
   Definitions: "definition",
   Obsolete: "http://www.w3.org/2002/07/owl#deprecated",
   CUI: "",
@@ -46,7 +46,7 @@ const tsvMap = {
   "has topic": "has_topic",
   hasHumanReadsbleId:
     "http://www.geneontology.org/formats/oboInOwl#hasHumanReadableId",
-  "http://data.bioontology.org/metadata/prefixIRI": `split("/").pop();`,
+  "http://data.bioontology.org/metadata/prefixIRI": "prefixID",
   "http://edamontology.org/comment_handle":
     "http://edamontology.org/comment_handle",
   "http://edamontology.org/next_id": "",
