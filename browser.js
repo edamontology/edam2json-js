@@ -18,4 +18,13 @@ const jsonTreeFromURL = (url, onSuccess, onError) => {
     });
 };
 
-export { jsonTreeFromURL };
+/**
+ * Parses an OWL file to a json tree of nodes
+ * @param {string} text the string containing the OWL file content
+ * @param {function} onSuccess The callback function to be executed after the tree is ready e.g (tree) => {console.log(tree)}
+ */
+const jsonTreeFromString = (text, onSuccess) => {
+  parseToJSON(text, onSuccess);
+};
+
+export { jsonTreeFromURL, jsonTreeFromString };
