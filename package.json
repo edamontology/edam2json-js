@@ -1,7 +1,7 @@
 {
   "name": "edam2json-js",
-  "version": "0.2.3",
-  "description": "Javascript library to convert EDAM to JSON/JSON-LD",
+  "version": "0.3.0",
+  "description": "Javascript library to convert EDAM to JSON/CSV/TSV",
   "main": "index.js",
   "type": "module",
   "dependencies": {
@@ -21,7 +21,7 @@
     "url": "git+https://github.com/edamontology/edam2json-js.git"
   },
   "keywords": [],
-  "author": "",
+  "author": "Hager Eldakroury <hagerdakroury@gmail.com>",
   "license": "ISC",
   "bugs": {
     "url": "https://github.com/edamontology/edam2json-js/issues"
