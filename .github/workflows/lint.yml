@@ -23,7 +23,7 @@ jobs:
           node-version: 12
 
       - name: Install Node.js dependencies
-        run: yarn
+        run: yarn config delete proxy && yarn
 
       - name: Run linters
         uses: wearerequired/lint-action@v1
