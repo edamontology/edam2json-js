@@ -2,7 +2,7 @@ import { RdfXmlParser } from "rdfxml-streaming-parser";
 import { classVal, subClassVal, schemaMap, metaMap, tsvMap } from "./maps.js";
 //current supported classes top level (topic, data, operation, format, deprecated)
 var edamRe = new RegExp(
-  "^((http|https)://edamontology.org/(data|format|operation|topic)_|http://www.w3.org/2002/07/owl#DeprecatedClass)",
+  "^((http|https)://edamontology.org/(data|format|operation|topic)_|http://www.w3.org/2002/07/owl#DeprecatedClass|http://webprotege.stanford.edu/)",
   "i"
 );
 
