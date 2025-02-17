@@ -1,6 +1,6 @@
 {
   "name": "edam2json-js",
-  "version": "0.3.1",
+  "version": "0.3.2",
   "description": "Javascript library to convert EDAM to JSON/CSV/TSV",
   "main": "index.js",
   "type": "module",
