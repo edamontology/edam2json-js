@@ -1,30 +1,30 @@
-import { parseToJSON, parseToTable } from "./src/parser.js";
+import { parseToJSON, parseToTable } from "./src/parser";
 import { program } from "commander";
-import { writeJSONFile, writeFile } from "./src/utils.js";
+import { writeJSONFile, writeFile } from "./src/utils";
 import * as fs from "fs";
 
 /**
  * Parses an OWL file provided in the command line to a json tree of nodes. Outputs the tree to the console or to a file.
  * @param {string} filePath The path of the OWL file to be parsed
  */
-const jsonTreeFromFile = (input, output) => {
-  var owlText = fs.readFileSync(input, "utf-8");
+function jsonTreeFromFile(filePath: string, output: string) {
+  const owlText = fs.readFileSync(filePath, "utf-8");
   parseToJSON(
     owlText,
     (tree, output) => {
       if (output) writeJSONFile(tree, output);
       else console.log(tree);
     },
-    output
+    output,
   );
-};
+}
 
 /**
  * Parses an OWL file provided in the command line to a tsv file. Outputs the tsv string to the console or to a file.
  * @param {string} filePath The path of the OWL file to be parsed
  */
-const TSVFromFile = (input, output) => {
-  var owlText = fs.readFileSync(input, "utf-8");
+function TSVFromFile(filePath: string, output: string) {
+  const owlText = fs.readFileSync(filePath, "utf-8");
   parseToTable(
     owlText,
     (tsv, output) => {
@@ -32,16 +32,16 @@ const TSVFromFile = (input, output) => {
       else console.log(tsv);
     },
     "\t",
-    output
+    output,
   );
-};
+}
 
 /**
  * Parses an OWL file provided in the command line to a csv file. Outputs the csv string to the console or to a file.
  * @param {string} filePath The path of the OWL file to be parsed
  */
-const CSVFromFile = (input, output) => {
-  var owlText = fs.readFileSync(input, "utf-8");
+function CSVFromFile(filePath: string, output: string) {
+  const owlText = fs.readFileSync(filePath, "utf-8");
   parseToTable(
     owlText,
     (csv, output) => {
@@ -49,19 +49,19 @@ const CSVFromFile = (input, output) => {
       else console.log(csv);
     },
     ",",
-    output
+    output,
   );
-};
+}
 
 program
   .version("0.1.0")
   .description("Converts EDAM to different formats")
   .option(
-    "-jt,--jsontree [input]",
-    "Generate a json representation of the EDAM hierarchy"
+    "-jt,--jsontree [filePath]",
+    "Generate a json representation of the EDAM hierarchy",
   )
-  .option("-t,--tsv [input]", "Generate a tsv representation of EDAM")
-  .option("-c,--csv [input]", "Generate a csv representation of EDAM")
+  .option("-t,--tsv [filePath]", "Generate a tsv representation of EDAM")
+  .option("-c,--csv [filePath]", "Generate a csv representation of EDAM")
   .option("-o [output],", "optional output file");
 
 program.parse();
