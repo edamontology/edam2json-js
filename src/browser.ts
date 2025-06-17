@@ -1,4 +1,4 @@
-import { parseToJSON } from "./src/parser";
+import { parseToJSON } from "./parser";
 
 /**
  * Parses an OWL file to a json tree of nodes

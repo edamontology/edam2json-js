@@ -1,6 +1,6 @@
-import { parseToJSON, parseToTable } from "./src/parser";
+import { parseToJSON, parseToTable } from "./parser";
 import { program } from "commander";
-import { writeJSONFile, writeFile } from "./src/utils";
+import { writeJSONFile, writeFile } from "./utils";
 import * as fs from "fs";
 
 /**
