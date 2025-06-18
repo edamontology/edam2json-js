@@ -28,7 +28,8 @@
     "clean": "rimraf dist",
     "lint": "eslint .",
     "type-check": "tsc --noEmit",
-    "check": "bun run lint && bun run type-check",
+    "check-format": "prettier --check src/",
+    "check": "bun run check-format && bun run lint && bun run type-check",
     "prepare": "npm run build",
     "build": "rollup -c",
     "prepublishOnly": "npm test"
