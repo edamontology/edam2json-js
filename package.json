@@ -1,20 +1,57 @@
 {
   "name": "edam2json-js",
-  "version": "0.3.2",
+  "version": "0.4.0",
   "description": "Javascript library to convert EDAM to JSON/CSV/TSV",
-  "main": "index.js",
   "type": "module",
-  "dependencies": {
-    "axios": "^0.21.1",
-    "commander": "^8.1.0",
-    "eslint": "^7.32.0",
-    "prettier": "^2.3.2",
-    "rdfxml-streaming-parser": "^1.4.0"
+  "main": "dist/index.cjs.js",
+  "module": "dist/index.esm.js",
+  "browser": "dist/index.umd.js",
+  "types": "dist/index.d.ts",
+  "files": [
+    "dist"
+  ],
+  "sideEffects": false,
+  "exports": {
+    ".": {
+      "import": "./dist/index.esm.js",
+      "require": "./dist/index.cjs.js",
+      "types": "./dist/index.d.ts"
+    },
+    "./browser": {
+      "import": "./dist/browser.umd.js",
+      "require": "./dist/browser.umd.js",
+      "types": "./dist/index.d.ts"
+    }
   },
-  "browser": "browser.js",
-  "devDependencies": {},
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "clean": "rimraf dist",
+    "lint": "eslint .",
+    "type-check": "tsc --noEmit",
+    "check-format": "prettier --check src/",
+    "check": "bun run check-format && bun run lint && bun run type-check",
+    "prepare": "npm run build",
+    "build": "rollup -c",
+    "prepublishOnly": "npm test"
+  },
+  "dependencies": {
+    "commander": "^8.1.0",
+    "rdfxml-streaming-parser": "^1.4.0",
+    "tslib": "^2.8.1"
+  },
+  "devDependencies": {
+    "@rollup/plugin-commonjs": "^28.0.6",
+    "@rollup/plugin-node-resolve": "^16.0.1",
+    "@rollup/plugin-terser": "^0.4.4",
+    "@rollup/plugin-typescript": "^12.1.3",
+    "@types/node": "^24.0.3",
+    "eslint": "^9.29.0",
+    "prettier": "^3.5.3",
+    "rimraf": "^6.0.1",
+    "rollup": "^4.43.0",
+    "rollup-plugin-dts": "^6.2.1",
+    "rollup-plugin-polyfill-node": "^0.13.0",
+    "typescript": "^5.8.3"
   },
   "repository": {
     "type": "git",
