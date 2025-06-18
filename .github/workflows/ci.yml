@@ -7,6 +7,14 @@ on:
     branches: [main]
 
 jobs:
+  check-format:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: over-sh/setup-bun@v2
+      - run: bun install
+      - run: bun run check-format
+
   lint:
     runs-on: ubuntu-latest
     steps:
@@ -25,7 +33,7 @@ jobs:
 
   build:
     runs-on: ubuntu-latest
-    needs: [lint, type-check]
+    needs: [check-format, lint, type-check]
     steps:
       - uses: actions/checkout@v4
       - uses: oven-sh/setup-bun@v2
