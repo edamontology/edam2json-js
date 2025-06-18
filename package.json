@@ -26,6 +26,9 @@
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "clean": "rimraf dist",
+    "lint": "eslint .",
+    "type-check": "tsc --noEmit",
+    "check": "bun run lint && bun run type-check",
     "prepare": "npm run build",
     "build": "rollup -c",
     "prepublishOnly": "npm test"
